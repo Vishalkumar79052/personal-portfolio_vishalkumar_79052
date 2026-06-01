@@ -1,0 +1,25 @@
+{
+  "name": "Remix: Remix: Vishal Kumar",
+  "description": "Personal portfolio website of Vishal Kumar, AI \u0026 Full-Stack Developer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ],
+  "forms": {
+    "contact": {
+      "name": "Portfolio Contact Form",
+      "actions": [
+        {
+          "type": "email",
+          "to": "[vishalcse340@gmail.com](mailto:vishalcse340@gmail.com)"
+        },
+        {
+          "type": "autoresponse",
+          "fromName": "Vishal Kumar",
+          "subject": "Thanks for contacting me!",
+          "message": "Hello! Thank you for reaching out through my portfolio website. I have received your message and will review it shortly. I\u0027ll get back to you as soon as possible."
+        }
+      ]
+    }
+  }
+}

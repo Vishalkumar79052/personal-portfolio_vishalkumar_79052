@@ -1,0 +1,268 @@
+import express from "express";
+import path from "path";
+import { createServer as createViteServer } from "vite";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// Initialize server-side Gemini client
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || "",
+  httpOptions: {
+    headers: {
+      'User-Agent': 'aistudio-build',
+    }
+  }
+});
+
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  app.use(express.json());
+
+  // Vishal's detailed professional resume details for context injection
+  const VISHAL_RESUME_CONTEXT = `
+You are the AI Assistant representative on Vishal Kumar's personal portfolio website. 
+Your tone should be professional, welcoming, highly competent, and smart. Keep your answers clear, concise, and direct.
+
+About Vishal Kumar:
+- Name: Vishal Kumar
+- Current Role: AI & Full-Stack Developer
+- Focus Area: Building AI-powered web applications using Node.js, React, Express, and LLMs (Large Language Models).
+- Key Specialties: Prompt Engineering, Agentic Workflows, Retrieval-Augmented Generation (RAG), Fine-Tuning LLMs, Vector Databases (Pinecone, ChromaDB), full-stack development, serverless APIs.
+- Location: Uttar Pradesh, India (Open to Remote opportunities worldwide)
+- Contact Email: vishalcse340@gmail.com
+- GitHub: https://github.com/Vishalkumar79052
+- LinkedIn: https://www.linkedin.com/in/vishal-kumar-79052v/
+- Facebook: https://www.facebook.com/profile.php?id=100075959205667
+
+His Stack & Core Skills:
+- Frontend: React, Next.js, Redux, Tailwind CSS, TypeScript, Vite, motion animations.
+- Backend: Node.js, Express, FastAPI (Python), GraphQL, REST APIs.
+- Database: PostgreSQL, MongoDB, Pinecone, Redis, DynamoDB.
+- AI Frameworks & Tools: Gemini API, LangChain, LlamaIndex, OpenAI API, Hugging Face.
+- DevOps / Cloud: AWS Lambda, Docker, GitHub Actions, Vercel, Supabase.
+
+His Experience Highlights:
+1. AI & Full-Stack Development Projects (Jan 2025 - Present):
+   - Developing AI-powered web applications using Node.js, React, and LLM APIs.
+   - Building smart chatbot systems, secure document analysis endpoints, and automation workflows.
+   - Exploring practical Retrieval-Augmented Generation (RAG) and prompt engineering optimization.
+
+2. Personal Full-Stack Projects (Jul 2024 - Dec 2024):
+   - Built and deployed multiple web applications focusing on frontend development, express APIs, database integration, and session validation.
+   - Designed database structures utilizing MongoDB to persist session variables.
+   - Practiced stateless authentication, secure JWT issuance, and structured Git repository version tracking.
+
+4. Educational Background:
+   - Bachelor of Technology (B.Tech) in Computer Science & Engineering.
+
+Aesthetic / Custom Portfolio details:
+- He built an interactive "Vector & Semantic Projection Simulator" with custom mathematical computations on his website to demonstrate how LLMs utilize Vector Embeddings and Cosine Proximity for semantic search.
+- The website features verified AWS certifications (e.g., AWS Certified Developer, AWS Certified Solutions Architect, and AWS Certified AI Practitioner).
+
+Answer any questions regarding Vishal's skills, experience, or projects. Keep answers focused. Do not hallicinate credentials he doesn't have.
+`;
+
+  // API Endpoint: AI Assistant chat route proxying to Gemini
+  app.post("/api/chat", async (req, res) => {
+    try {
+      const { messages } = req.body;
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ error: "Messages array is required." });
+      }
+
+      // Convert standard messages into generative contents
+      // Prepare history structure for the model
+      const contents = messages.map((m: any) => ({
+        role: m.role === "user" ? "user" : "model",
+        parts: [{ text: m.content }]
+      }));
+
+      // Call Gemini 3.5 Flash Model
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: contents,
+        config: {
+          systemInstruction: VISHAL_RESUME_CONTEXT,
+          temperature: 0.7,
+        }
+      });
+
+      const reply = response.text || "I'm sorry, I couldn't process that query.";
+      res.json({ reply });
+    } catch (error: any) {
+      console.error("Gemini Assistant error:", error);
+      res.status(500).json({ error: error.message || "Failed to communicate with AI Assistant." });
+    }
+  });
+
+  // API Endpoint: Contact Form Submission Handler
+  app.post("/api/forms/contact", async (req, res) => {
+    try {
+      const { name, email, message } = req.body;
+      if (!name || !email || !message) {
+        return res.status(400).json({ error: "Name, email, and message are required." });
+      }
+
+      console.log(`[Form Submission - Portfolio Contact Form]:`);
+      console.log(`Name: ${name}`);
+      console.log(`Email: ${email}`);
+      console.log(`Message: ${message}`);
+      console.log(`Action (Email): Forwarding to [vishalcse340@gmail.com](mailto:vishalcse340@gmail.com)`);
+      console.log(`Action (Autoresponse): From "Vishal Kumar" | Subject: "Thanks for contacting me!"`);
+
+      const serviceId = process.env.EMAILJS_SERVICE_ID || "service_sfy1umz";
+      const templateId = process.env.EMAILJS_TEMPLATE_ID || "template_wdr79ub";
+      const publicKey = process.env.EMAILJS_PUBLIC_KEY;
+
+      const web3FormsKey = process.env.WEB3FORMS_ACCESS_KEY?.trim() || "2096dd3a-1a4e-4e9b-8352-e80a7584161e";
+
+      let emailJsSent = false;
+      let emailJsStatus = "idle";
+      let emailJsDetail = "";
+
+      let web3FormsSent = false;
+      let web3FormsStatus = "idle";
+      let web3FormsDetail = "";
+
+      // Dispatch via Web3Forms (prioritized or as primary form option)
+      if (web3FormsKey) {
+        try {
+          const payload = {
+            access_key: web3FormsKey,
+            name: name,
+            email: email,
+            message: message,
+            subject: `New Portfolio Message from ${name}`,
+            from_name: "Vishal Kumar Portfolio"
+          };
+
+          const web3Response = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify(payload),
+          });
+
+          const web3Result = await web3Response.json();
+          if (web3Response.ok && web3Result.success) {
+            web3FormsSent = true;
+            web3FormsStatus = "success";
+            console.log("Web3Forms dispatch succeeded!");
+          } else {
+            web3FormsStatus = "failed";
+            web3FormsDetail = `Web3Forms returned: ${web3Result.message || web3Response.statusText}`;
+            console.error(web3FormsDetail);
+          }
+        } catch (err: any) {
+          web3FormsStatus = "error";
+          web3FormsDetail = err.message || "Failed to dispatch Web3Forms request";
+          console.error("Web3Forms dispatch error:", err);
+        }
+      }
+
+      if (publicKey && publicKey.trim().length > 0) {
+        try {
+          const payload = {
+            service_id: serviceId,
+            template_id: templateId,
+            user_id: publicKey.trim(),
+            template_params: {
+              from_name: name,
+              from_email: email,
+              reply_to: email,
+              message: message,
+              to_name: "Vishal Kumar"
+            }
+          };
+
+          const emailResponse = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (emailResponse.ok) {
+            emailJsSent = true;
+            emailJsStatus = "success";
+            console.log("EmailJS dispatch succeeded!");
+          } else {
+            const errText = await emailResponse.text();
+            emailJsStatus = "failed";
+            emailJsDetail = `EmailJS API returned ${emailResponse.status}: ${errText}`;
+            console.error(emailJsDetail);
+          }
+        } catch (err: any) {
+          emailJsStatus = "error";
+          emailJsDetail = err.message || "Failed to dispatch EmailJS API request";
+          console.error("EmailJS dispatch error:", err);
+        }
+      } else {
+        emailJsStatus = "skipped_missing_public_key";
+        console.log("EmailJS Public Key not detected in environment variables. Message recorded only in local server log.");
+      }
+
+      // Real integration handling response
+      res.json({
+        success: true,
+        message: "Message successfully submitted and processed.",
+        deliveryType: "email",
+        recipient: "[vishalcse340@gmail.com](mailto:vishalcse340@gmail.com)",
+        emailJs: {
+          sent: emailJsSent,
+          status: emailJsStatus,
+          detail: emailJsDetail,
+          serviceId,
+          templateId
+        },
+        web3Forms: {
+          sent: web3FormsSent,
+          status: web3FormsStatus,
+          detail: web3FormsDetail
+        },
+        autorespond: {
+          fromName: "Vishal Kumar",
+          subject: "Thanks for contacting me!",
+          message: "Hello! Thank you for reaching out through my portfolio website. I have received your message and will review it shortly. I'll get back to you as soon as possible."
+        },
+        submission: {
+          name,
+          email,
+          message,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error: any) {
+      console.error("Form processing error:", error);
+      res.status(500).json({ error: error.message || "Failed to process form submission." });
+    }
+  });
+
+  // Serve static assets in production, otherwise mount Vite middleware in development
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+startServer();
