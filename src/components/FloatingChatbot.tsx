@@ -76,7 +76,17 @@ export default function FloatingChatbot() {
     });
 
     // 1. Parse the JSON response first, regardless of response status
-    const data = await res.json();
+    // const data = await res.json();
+
+ const text = await res.text();
+console.log("API Response:", text);
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch (err) {
+  throw new Error(`Server returned non-JSON: ${text}`);
+}
 
     // 2. If the server returned a bad status code, throw the *actual* error message sent by the backend
     if (!res.ok) {
