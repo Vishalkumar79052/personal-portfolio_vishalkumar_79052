@@ -20,7 +20,7 @@ export const JOSH_BIO = {
 };
 
 export const JOSH_STATS: StatItem[] = [
-  { value: "7.5", label: "B.Tech GPA" },
+  { value: "7.5", label: "B.Tech CGPA" },
   { value: "10+", label: "Build Projects" },
   { value: "20+", label: "Certifications" }
 ];
