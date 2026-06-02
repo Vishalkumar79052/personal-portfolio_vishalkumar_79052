@@ -93,7 +93,7 @@ export default function FloatingChatbot() {
       ...prev, 
       { 
         role: 'assistant', 
-        content: `⚠️ ${err.message || "Oops! I encountered an API ripple. Please try again in a bit."}` 
+        content: `${err.message || "Oops! I encountered an API ripple. Please try again in a bit."}` 
       }
     ]);
   } finally {
