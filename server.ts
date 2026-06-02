@@ -7,13 +7,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Initialize server-side Gemini client
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY is missing");
+}
+
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || "",
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 async function startServer() {
@@ -63,7 +62,7 @@ Aesthetic / Custom Portfolio details:
 - He built an interactive "Vector & Semantic Projection Simulator" with custom mathematical computations on his website to demonstrate how LLMs utilize Vector Embeddings and Cosine Proximity for semantic search.
 - The website features verified AWS certifications (e.g., AWS Certified Developer, AWS Certified Solutions Architect, and AWS Certified AI Practitioner).
 
-Answer any questions regarding Vishal's skills, experience, or projects. Keep answers focused. Do not hallicinate credentials he doesn't have.
+Answer any questions regarding Vishal's skills, experience, or projects. Keep answers focused. Do not hallucinate credentials he doesn't have.
 `;
 
   // API Endpoint: AI Assistant chat route proxying to Gemini
@@ -74,28 +73,41 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
         return res.status(400).json({ error: "Messages array is required." });
       }
 
-      // Convert standard messages into generative contents
-      // Prepare history structure for the model
+      // Convert standard messages into generative contents array structure
       const contents = messages.map((m: any) => ({
         role: m.role === "user" ? "user" : "model",
         parts: [{ text: m.content }]
       }));
 
-      // Call Gemini 3.5 Flash Model
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: contents,
-        config: {
-          systemInstruction: VISHAL_RESUME_CONTEXT,
-          temperature: 0.7,
-        }
-      });
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.5-flash",
+          contents,
+          config: {
+            systemInstruction: VISHAL_RESUME_CONTEXT,
+            temperature: 0.7,
+          },
+        });
 
-      const reply = response.text || "I'm sorry, I couldn't process that query.";
-      res.json({ reply });
-    } catch (error: any) {
-      console.error("Gemini Assistant error:", error);
-      res.status(500).json({ error: error.message || "Failed to communicate with AI Assistant." });
+        return res.json({
+          reply: response.text || "I'm sorry, I couldn't process that query.",
+        });
+      } catch (error: any) {
+        console.error("Gemini Internal Error:", error);
+
+        if (String(error).includes("503")) {
+          return res.status(503).json({
+            error: "Gemini is busy right now. Please try again in a few seconds.",
+          });
+        }
+
+        return res.status(500).json({
+          error: error.message || String(error),
+        });
+      }
+    } catch (outerError: any) {
+      console.error("Route parsing error:", outerError);
+      return res.status(500).json({ error: "Internal server router issue." });
     }
   });
 
@@ -111,13 +123,11 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
       console.log(`Name: ${name}`);
       console.log(`Email: ${email}`);
       console.log(`Message: ${message}`);
-      console.log(`Action (Email): Forwarding to [vishalcse340@gmail.com](mailto:vishalcse340@gmail.com)`);
-      console.log(`Action (Autoresponse): From "Vishal Kumar" | Subject: "Thanks for contacting me!"`);
+      console.log(`Action (Email): Forwarding to vishalcse340@gmail.com`);
 
       const serviceId = process.env.EMAILJS_SERVICE_ID || "service_sfy1umz";
       const templateId = process.env.EMAILJS_TEMPLATE_ID || "template_wdr79ub";
       const publicKey = process.env.EMAILJS_PUBLIC_KEY;
-
       const web3FormsKey = process.env.WEB3FORMS_ACCESS_KEY?.trim() || "2096dd3a-1a4e-4e9b-8352-e80a7584161e";
 
       let emailJsSent = false;
@@ -128,7 +138,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
       let web3FormsStatus = "idle";
       let web3FormsDetail = "";
 
-      // Dispatch via Web3Forms (prioritized or as primary form option)
+      // Dispatch via Web3Forms
       if (web3FormsKey) {
         try {
           const payload = {
@@ -166,6 +176,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
         }
       }
 
+      // Dispatch via EmailJS
       if (publicKey && publicKey.trim().length > 0) {
         try {
           const payload = {
@@ -206,15 +217,14 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
         }
       } else {
         emailJsStatus = "skipped_missing_public_key";
-        console.log("EmailJS Public Key not detected in environment variables. Message recorded only in local server log.");
+        console.log("EmailJS Public Key not detected. Logged locally.");
       }
 
-      // Real integration handling response
       res.json({
         success: true,
         message: "Message successfully submitted and processed.",
         deliveryType: "email",
-        recipient: "[vishalcse340@gmail.com](mailto:vishalcse340@gmail.com)",
+        recipient: "vishalcse340@gmail.com",
         emailJs: {
           sent: emailJsSent,
           status: emailJsStatus,
@@ -230,7 +240,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
         autorespond: {
           fromName: "Vishal Kumar",
           subject: "Thanks for contacting me!",
-          message: "Hello! Thank you for reaching out through my portfolio website. I have received your message and will review it shortly. I'll get back to you as soon as possible."
+          message: "Hello! Thank you for reaching out through my portfolio website. I have received your message and will review it shortly."
         },
         submission: {
           name,
@@ -245,7 +255,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
     }
   });
 
-  // Serve static assets in production, otherwise mount Vite middleware in development
+  // Serve static assets or mount Vite dev middleware
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

@@ -1,40 +1,20 @@
-import { useEffect, useState, useRef, ChangeEvent } from 'react';
-import { MapPin, Clock, Sparkles, Camera } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { MapPin, Clock, Sparkles } from 'lucide-react';
 import { JOSH_BIO } from '../data';
-// @ts-ignore
-import vishalAvatar from '../assets/images/vishal_avatar_1780254597338.png';
+//  @ts-ignore
+ import vishalPhoto from '../assets/images/635e4ccd-5b61-4527-8eae-cffca285e280.jpg';
 
 interface HeroProps {
   theme: string;
   setTheme: (theme: string) => void;
+  visitorName: string;
+  setVisitorName: (name: string) => void;
+  visitorRole: string;
+  setVisitorRole: (role: string) => void;
 }
 
-export default function Hero({ theme, setTheme }: HeroProps) {
+export default function Hero({ theme, setTheme, visitorName, setVisitorName, visitorRole, setVisitorRole }: HeroProps) {
   const [localTime, setLocalTime] = useState<string>('');
-  const [avatar, setAvatar] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('custom-avatar') || 'https://github.com/Vishalkumar79052.png';
-    }
-    return 'https://github.com/Vishalkumar79052.png';
-  });
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        localStorage.setItem('custom-avatar', base64String);
-        setAvatar(base64String);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const triggerFileSelect = () => {
-    fileInputRef.current?.click();
-  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -55,6 +35,29 @@ export default function Hero({ theme, setTheme }: HeroProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const getKolkataGreeting = () => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Kolkata',
+        hour: 'numeric',
+        hour12: false
+      });
+      const hour = parseInt(formatter.format(new Date()), 10);
+      if (hour >= 5 && hour < 12) return 'Good Morning ☀️';
+      if (hour >= 12 && hour < 17) return 'Good Afternoon 🌤️';
+      if (hour >= 17 && hour < 22) return 'Good Evening 🌌';
+      return 'Good Night 🌙';
+    } catch (e) {
+      return 'Welcome 👋';
+    }
+  };
+
+  const currentGreeting = getKolkataGreeting();
+
+  const handleRoleSelect = (role: string) => {
+    setVisitorRole(role);
+  };
+
   return (
     <section id="hero" className="w-full pt-6 md:pt-10 scroll-mt-24 space-y-8" aria-label="Hero Intro">
       {/* Bio / Heading Block */}
@@ -63,21 +66,26 @@ export default function Hero({ theme, setTheme }: HeroProps) {
         {/* Texts Info (Name + Title + Tagline) */}
         <div className="flex-1 text-center md:text-left space-y-4">
           
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-            <span className="text-xs font-mono font-bold tracking-widest text-indigo-400 uppercase py-1 px-2.5 rounded bg-indigo-500/10 border border-indigo-500/20 shadow-sm">
-              Portfolio
-            </span>
-            <span className="text-xs font-mono text-zinc-500 flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 text-xs font-mono">
+            <span className="text-zinc-400 flex items-center gap-1 bg-zinc-900/50 border border-zinc-800 rounded-full px-3 py-1">
               <MapPin className="w-3 h-3 text-rose-400" />
               {JOSH_BIO.location}
             </span>
+            {localTime && (
+              <span className="text-zinc-400 flex items-center gap-1.5 bg-indigo-500/5 border border-indigo-500/15 rounded-full px-3 py-1">
+                <Clock className="w-3 h-3 text-indigo-400" />
+                <span>Local Time: <span className="text-zinc-200 font-semibold select-all">{localTime}</span></span>
+              </span>
+            )}
           </div>
 
-          <h1 className="text-4xl xs:text-5xl font-black tracking-tight text-white md:text-6xl select-none leading-none">
-            <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
-              {JOSH_BIO.name}
-            </span>
-          </h1>
+          <div className="space-y-1">
+            <h1 className="text-4xl xs:text-5xl font-black tracking-tight text-white md:text-6xl select-none leading-none">
+              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+                {JOSH_BIO.name}
+              </span>
+            </h1>
+          </div>
 
           <h2 className="text-lg font-bold tracking-tight text-indigo-400 sm:text-xl flex items-center justify-center md:justify-start gap-1.5 font-sans">
             <span>{JOSH_BIO.role}</span>
@@ -98,53 +106,27 @@ export default function Hero({ theme, setTheme }: HeroProps) {
           </div>
         </div>
 
-        {/* Dynamic Avatar */}
-        <div className="relative group w-32 h-32 sm:w-36 sm:h-36 cursor-pointer shrink-0" onClick={triggerFileSelect}>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleAvatarChange}
-            accept="image/*"
-            className="hidden"
-            aria-label="Upload custom bio photo"
-          />
+        {/* Profile Avatar */}
+        <div className="relative group w-32 h-32 sm:w-36 sm:h-36 shrink-0">
           {/* Neon cosmic aura flow */}
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 via-pink-500 to-cyan-500 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-300 animate-pulse pointer-events-none" />
           
           <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white/10 group-hover:border-white/30 transition-colors duration-300 bg-zinc-950">
             <img
-              src={avatar}
-              alt="Vishal Kumar Avatar"
+               src={vishalPhoto}
+               alt="Vishal Kumar"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
               onError={(e) => {
-                e.currentTarget.src = vishalAvatar;
+                e.currentTarget.src = 'https://github.com/Vishalkumar79052.png';
               }}
             />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity duration-300">
-              <Camera className="w-5 h-5 text-white" />
-              <span className="text-[9px] text-zinc-300 font-sans font-semibold uppercase tracking-wider">Change Photo</span>
-            </div>
           </div>
           <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-emerald-500 border border-zinc-950 flex items-center justify-center shadow">
             <span className="absolute inline-flex h-2 w-2 rounded-full bg-emerald-300 animate-ping" />
           </span>
         </div>
       </div>
-
-      {/* Kolkata local Clock bar */}
-      {localTime && (
-        <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 bg-zinc-900/30 border border-zinc-900 rounded-xl py-2.5 px-4 w-fit">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <Clock className="w-3.5 h-3.5 text-zinc-400 ml-1" />
-          <span>Local Time (IST): <strong className="text-white select-all">{localTime}</strong></span>
-        </div>
-      )}
-
-
 
       {/* Embedded Colorful Theme Therapeutic Control Swapper */}
       <div className="p-5 bg-white/5 border border-white/5 rounded-2xl backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

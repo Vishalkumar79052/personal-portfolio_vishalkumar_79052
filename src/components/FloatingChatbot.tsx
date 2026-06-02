@@ -21,38 +21,85 @@ export default function FloatingChatbot() {
     }
   }, [messages, isOpen]);
 
-  const handleSendChat = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isSending) return;
+  // const handleSendChat = async (e: FormEvent) => {
+  //   e.preventDefault();
+  //   if (!input.trim() || isSending) return;
 
-    const userMsg = input.trim();
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    setIsSending(true);
+  //   const userMsg = input.trim();
+  //   setInput('');
+  //   setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+  //   setIsSending(true);
 
-    try {
-      const chatHistory = [...messages, { role: 'user', content: userMsg }].map(m => ({
-        role: m.role,
-        content: m.content
-      }));
+  //   try {
+  //     const chatHistory = [...messages, { role: 'user', content: userMsg }].map(m => ({
+  //       role: m.role,
+  //       content: m.content
+  //     }));
 
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: chatHistory })
-      });
+  //     const res = await fetch('/api/chat', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ messages: chatHistory })
+  //     });
 
-      if (!res.ok) throw new Error('API communication error');
-      const data = await res.json();
+  //     if (!res.ok) throw new Error('API communication error');
+  //     const data = await res.json();
       
-      setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
-    } catch (err) {
-      console.error(err);
-      setMessages(prev => [...prev, { role: 'assistant', content: "Oops! I encountered an API ripple. Please try again in a bit." }]);
-    } finally {
-      setIsSending(false);
+  //     setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessages(prev => [...prev, { role: 'assistant', content: "Oops! I encountered an API ripple. Please try again in a bit." }]);
+  //   } finally {
+  //     setIsSending(false);
+  //   }
+  // };
+
+  const handleSendChat = async (e: FormEvent) => {
+  e.preventDefault();
+  if (!input.trim() || isSending) return;
+
+  const userMsg = input.trim();
+  setInput('');
+  setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+  setIsSending(true);
+
+  try {
+    const chatHistory = [...messages, { role: 'user', content: userMsg }].map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: chatHistory })
+    });
+
+    // 1. Parse the JSON response first, regardless of response status
+    const data = await res.json();
+
+    // 2. If the server returned a bad status code, throw the *actual* error message sent by the backend
+    if (!res.ok) {
+      throw new Error(data.error || `HTTP error! status: ${res.status}`);
     }
-  };
+    
+    // 3. Success state
+    setMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
+  } catch (err: any) {
+    console.error("Chatbot Frontend Error:", err);
+    
+    // 4. Present the real backend error in the chat interface so you can debug instantly
+    setMessages(prev => [
+      ...prev, 
+      { 
+        role: 'assistant', 
+        content: `⚠️ ${err.message || "Oops! I encountered an API ripple. Please try again in a bit."}` 
+      }
+    ]);
+  } finally {
+    setIsSending(false);
+  }
+};
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
