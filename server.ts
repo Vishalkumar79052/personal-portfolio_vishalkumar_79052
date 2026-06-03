@@ -81,7 +81,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
 
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.5-flash",
+          model: "gemini-2.5-flash",
           contents,
           config: {
             systemInstruction: VISHAL_RESUME_CONTEXT,
