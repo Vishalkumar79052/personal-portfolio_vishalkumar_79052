@@ -23,9 +23,9 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY_1,
 });
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+// async function startServer() {
+  // const app = express();
+  // const PORT = 3000;
 
   app.use(express.json());
 
@@ -281,7 +281,7 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
   // app.listen(PORT, "0.0.0.0", () => {
   //   console.log(`Server running on port ${PORT}`);
   // });
-}
+
 
 // startServer();
 
