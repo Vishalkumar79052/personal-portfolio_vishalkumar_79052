@@ -1,10 +1,18 @@
 import express from "express";
+import cors from "cors";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
+
 dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
 
 // Initialize server-side Gemini client
 if (!process.env.GEMINI_API_KEY_1) {
@@ -270,9 +278,11 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  // app.listen(PORT, "0.0.0.0", () => {
+  //   console.log(`Server running on port ${PORT}`);
+  // });
 }
 
-startServer();
+// startServer();
+
+export default app;
