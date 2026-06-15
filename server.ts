@@ -7,8 +7,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Initialize server-side Gemini client
-if (!process.env.GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY is missing");
+if (!process.env.GEMINI_API_KEY_1) {
+  throw new Error("GEMINI_API_KEY_1 is missing");
 }
 
 const ai = new GoogleGenAI({
