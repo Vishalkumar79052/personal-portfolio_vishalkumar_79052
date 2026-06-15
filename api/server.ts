@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-import { createServer as createViteServer } from "vite";
+// import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -264,19 +264,19 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
   });
 
   // Serve static assets or mount Vite dev middleware
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
+  // if (process.env.NODE_ENV !== "production") {
+  //   const vite = await createViteServer({
+  //     server: { middlewareMode: true },
+  //     appType: "spa",
+  //   });
+  //   app.use(vite.middlewares);
+  // } else {
+  //   const distPath = path.join(process.cwd(), 'dist');
+  //   app.use(express.static(distPath));
+  //   app.get('*', (req, res) => {
+  //     res.sendFile(path.join(distPath, 'index.html'));
+  //   });
+  // }
 
   // app.listen(PORT, "0.0.0.0", () => {
   //   console.log(`Server running on port ${PORT}`);
