@@ -35,7 +35,7 @@ export default function Header({ activeSection, theme }: HeaderProps) {
     }
 
     const link = document.createElement('a');
-    link.href = '/RenderCV_VISHALKUMARResumes (1).pdf';
+    link.href = '/RenderCV_EngineeringResumes_2026 Update.pdf';
     link.download = 'Vishal_Kumar_Resume.pdf';
     document.body.appendChild(link);
     link.click();
