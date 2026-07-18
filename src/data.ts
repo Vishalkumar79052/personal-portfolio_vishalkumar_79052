@@ -52,7 +52,7 @@ export const ALL_PROJECTS: ProjectItem[] = [
     technologies: ["React", "Express.js", "Node.js", "MongoDB", "Tailwind CSS", "Gemini API", "PDF Generation"],
     projectType: "Full-Stack AI Application",
     iconName: "message-square",
-    link: "https://github.com/Vishalkumar79052/AI_mock_interview"
+    link: "https://ai-mearnproject-3.onrender.com"
   },
   {
     id: "workout-project",
