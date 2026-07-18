@@ -84,7 +84,7 @@ export default function Projects() {
   const [filter, setFilter] = useState<string>('All');
 
   // Filter categories to make the view interactive and helpful
-  const categories = ['All', 'Full-Stack AI Application', 'Backend & Orchestration', 'Front-End Analytics', 'Backend Utility Middleware'];
+  const categories = ['All', 'Full-Stack AI Application', 'Backend ', 'Front-End Analytics', 'Backend Utility Middleware'];
 
   const filteredProjects = ALL_PROJECTS.filter((project) => {
     if (filter === 'All') return true;
