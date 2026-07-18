@@ -88,7 +88,7 @@ export const ALL_PROJECTS: ProjectItem[] = [
     technologies: ["HTML", "CSS", "Tailwind CSS", "JavaScript"],
     projectType: "Front-End Analytics",
     iconName: "map",
-    link: "https://github.com/Vishalkumar79052/MumbaiIndiansTeam2025"
+    link: "https://creative-queijadas-cf0897.netlify.app/"
   }
 ];
 
