@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
-import { Send, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2, Mail, MapPin, Clock } from 'lucide-react';
+import { JOSH_BIO } from '../data';
 
 export default function ContactForm() {
   const [name, setName] = useState('');
@@ -8,8 +9,6 @@ export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
-  const [emailJsStatus, setEmailJsStatus] = useState<{ status: string; detail?: string } | null>(null);
-  const [web3FormsStatus, setWeb3FormsStatus] = useState<{ status: string; detail?: string } | null>(null);
 
   const maxLength = 500;
 
@@ -20,68 +19,56 @@ export default function ContactForm() {
     setIsSubmitting(true);
     setSubmissionError(null);
     setSubmissionSuccess(false);
-    setEmailJsStatus(null);
-    setWeb3FormsStatus(null);
-    
+
+    const payload = {
+      name: name.trim(),
+      email: email.trim(),
+      message: message.trim(),
+    };
+
     try {
-      // Direct Web3Forms submission
-      const payload = {
-        access_key: "2096dd3a-1a4e-4e9b-8352-e80a7584161e",
-        name: name.trim(),
-        email: email.trim(),
-        message: message.trim(),
-        subject: `New Message from ${name.trim()} (Portfolio)`,
-        from_name: "Vishal Kumar Portfolio"
-      };
-
-      const response = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Failed to deliver message via Web3Forms API.");
-      }
-
-      setWeb3FormsStatus({ status: 'success' });
-
-      // Optional: Log/Sync with backend without disrupting successful submission
+      let delivered = false;
       try {
         const bkResponse = await fetch('/api/forms/contact', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            email: email.trim(),
-            message: message.trim(),
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         });
         if (bkResponse.ok) {
           const bkData = await bkResponse.json();
-          if (bkData && bkData.emailJs) {
-            setEmailJsStatus(bkData.emailJs);
+          if (bkData?.web3Forms?.sent || bkData?.emailJs?.sent || bkData?.success) {
+            delivered = true;
           }
         }
-      } catch (bkErr) {
-        console.warn("Backend local log sync skipped:", bkErr);
+      } catch {
+        // Fallback to direct Web3Forms if backend is unavailable
+      }
+
+      if (!delivered) {
+        const response = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            access_key: '2096dd3a-1a4e-4e9b-8352-e80a7584161e',
+            ...payload,
+            subject: `New Message from ${payload.name} (Portfolio)`,
+            from_name: 'Vishal Kumar Portfolio',
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'Failed to deliver message.');
+        }
       }
 
       setSubmissionSuccess(true);
-      
-      // Reset input fields
       setName('');
       setEmail('');
       setMessage('');
 
-      // Auto clear success indicator
       setTimeout(() => {
         setSubmissionSuccess(false);
       }, 5000);
@@ -94,127 +81,147 @@ export default function ContactForm() {
   };
 
   return (
-    <section id="contact" className="mb-24 scroll-mt-24 sm:mb-32">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-white/5 pb-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-indigo-500/10 to-pink-500/10 border border-indigo-500/20 text-xs sm:text-sm font-semibold tracking-widest uppercase shadow-[0_0_15px_rgba(168,85,247,0.05)] w-fit">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_#6366f1]" />
-          <span className="bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200 bg-clip-text text-transparent font-extrabold font-mono">
-            Contact
-          </span>
+    <section id="contact" className="mb-12 scroll-mt-24" aria-label="Contact form">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b border-[var(--border-subtle)] pb-4">
+        <div className="section-pill w-fit">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
+          <span>Contact</span>
         </div>
       </div>
 
-      <p className="text-zinc-400 text-sm mb-6 max-w-lg leading-relaxed">
-        I’m always open to talking about new opportunities, project designs, health-tech architectures, 
-        or mathematical models. Drop a line into the digital scratchpad below:
-      </p>
+      <div className="surface-card rounded-3xl p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-5 gap-8 relative overflow-hidden">
+        <div
+          className="absolute -bottom-24 -left-24 w-64 h-64 rounded-full blur-3xl pointer-events-none opacity-30"
+          style={{ background: 'var(--accent-glow)' }}
+        />
 
-      {/* Main submission Form */}
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label htmlFor="form-name" className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold block">
-              Your Name
-            </label>
-            <input
-              id="form-name"
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Marie Curie"
-              className="w-full rounded-lg bg-zinc-900 border border-zinc-800 text-sm px-3.5 py-2.5 text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500/80 transition-colors"
-            />
+        {/* Left Info Panel */}
+        <div className="relative lg:col-span-2 flex flex-col justify-between space-y-6">
+          <div className="space-y-3">
+            <h3 className="font-display text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text-primary)] leading-tight">
+              Let&apos;s build something{' '}
+              <span className="accent-gradient-text">remarkable.</span>
+            </h3>
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              Open to full-stack engineering roles, AI product collaborations, and freelance web applications. Drop a
+              note and I&apos;ll respond promptly.
+            </p>
           </div>
 
-          <div className="space-y-1.5">
-            <label htmlFor="form-email" className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold block">
-              Your Email Address
-            </label>
-            <input
-              id="form-email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="marie@curie.edu"
-              className="w-full rounded-lg bg-zinc-900 border border-zinc-800 text-sm px-3.5 py-2.5 text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500/80 transition-colors"
-            />
+          <div className="space-y-3 text-xs font-mono">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+              <Mail className="w-4 h-4 text-[var(--accent-text)] shrink-0" />
+              <span className="text-[var(--text-primary)] truncate select-all">{JOSH_BIO.email}</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+              <MapPin className="w-4 h-4 text-rose-500 shrink-0" />
+              <span className="text-[var(--text-secondary)]">{JOSH_BIO.location} · Remote Ready</span>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
+              <Clock className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span className="text-[var(--text-secondary)]">Usually replies within 24 hours</span>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center">
-            <label htmlFor="form-msg" className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 font-bold block">
-              Connection Message
-            </label>
-            <span className={`text-[10px] font-mono ${message.length >= maxLength ? 'text-rose-500' : 'text-zinc-650'}`}>
-              {message.length}/{maxLength}
-            </span>
+        {/* Right Form */}
+        <form onSubmit={handleSubmit} className="relative lg:col-span-3 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="form-name"
+                className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold block"
+              >
+                Your Name
+              </label>
+              <input
+                id="form-name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Ada Lovelace"
+                className="input-surface w-full rounded-xl text-sm px-3.5 py-2.5"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label
+                htmlFor="form-email"
+                className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold block"
+              >
+                Your Email Address
+              </label>
+              <input
+                id="form-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ada@example.com"
+                className="input-surface w-full rounded-xl text-sm px-3.5 py-2.5"
+              />
+            </div>
           </div>
-          <textarea
-            id="form-msg"
-            required
-            rows={4}
-            value={message}
-            maxLength={maxLength}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your project overview, query or collaborative idea here..."
-            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 text-sm px-3.5 py-2.5 text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500/80 transition-colors resize-none"
-          />
-        </div>
 
-        <div className="flex items-center gap-4 pt-1">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-500 hover:bg-indigo-400 disabled:bg-zinc-800 px-5 py-2.5 text-sm font-semibold text-white transition-colors cursor-pointer select-none gap-2"
-          >
-            {isSubmitting ? (
-              <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-            <span>Send Message</span>
-          </button>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <label
+                htmlFor="form-msg"
+                className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)] font-bold block"
+              >
+                Connection Message
+              </label>
+              <span
+                className={`text-[11px] font-mono ${
+                  message.length >= maxLength ? 'text-rose-500 font-bold' : 'text-[var(--text-muted)]'
+                }`}
+              >
+                {message.length}/{maxLength}
+              </span>
+            </div>
+            <textarea
+              id="form-msg"
+              required
+              rows={4}
+              value={message}
+              maxLength={maxLength}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type your project overview, query or collaborative idea here..."
+              className="input-surface w-full rounded-xl text-sm px-3.5 py-2.5 resize-none"
+            />
+          </div>
 
-          {submissionSuccess && (
-            <div className="flex flex-col gap-0.5 animate-fadeIn">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-mono">
-                <CheckCircle2 className="w-4 h-4 shrink-0 animate-bounce" />
-                <span>Message Received! Thank you.</span>
+          <div className="flex flex-wrap items-center gap-4 pt-1">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center justify-center rounded-xl accent-gradient-bg hover:opacity-95 disabled:opacity-60 px-6 py-2.5 text-sm font-bold text-white transition-all active:scale-95 cursor-pointer select-none gap-2 shadow-lg"
+            >
+              {isSubmitting ? (
+                <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+              <span>Send Message</span>
+            </button>
+
+            {submissionSuccess && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-500 font-mono font-semibold animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Message received! Thank you for reaching out.</span>
               </div>
-              {emailJsStatus && emailJsStatus.status === 'success' && (
-                <span className="text-[10px] font-mono text-indigo-400 pl-5 uppercase font-semibold">
-                  🚀 Delivery confirmed via EmailJS
-                </span>
-              )}
-              {web3FormsStatus && web3FormsStatus.status === 'success' && (
-                <span className="text-[10px] font-mono text-emerald-400 pl-5 uppercase font-semibold">
-                  🚀 Forwarded successfully via Web3Forms (Real-time Email)
-                </span>
-              )}
-              {emailJsStatus && emailJsStatus.status === 'skipped_missing_public_key' && (
-                <span className="text-[10px] font-mono text-zinc-500 pl-5">
-                  Set EMAILJS_PUBLIC_KEY in Secrets for live email dispatch.
-                </span>
-              )}
-              {emailJsStatus && (emailJsStatus.status === 'failed' || emailJsStatus.status === 'error') && (
-                <span className="text-[10px] font-mono text-amber-500 pl-5">
-                  ⚠️ EmailJS service delivery check failed: {emailJsStatus.detail}
-                </span>
-              )}
-            </div>
-          )}
+            )}
 
-          {submissionError && (
-            <div className="flex items-center gap-1.5 text-xs text-rose-400 font-mono animate-fadeIn">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
-              <span>{submissionError}</span>
-            </div>
-          )}
-        </div>
-      </form>
+            {submissionError && (
+              <div className="flex items-center gap-1.5 text-xs text-rose-500 font-mono font-semibold animate-fadeIn">
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                <span>{submissionError}</span>
+              </div>
+            )}
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

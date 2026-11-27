@@ -1,13 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-mode="dark" data-accent="aurora">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vishal Kumar | AI & Full-Stack Developer</title>
+    <script>
+      (function () {
+        try {
+          var mode = localStorage.getItem('portfolio-mode');
+          if (mode !== 'light' && mode !== 'dark') {
+            mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          }
+          var accent = localStorage.getItem('portfolio-accent') || 'aurora';
+          document.documentElement.setAttribute('data-mode', mode);
+          document.documentElement.setAttribute('data-accent', accent);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
