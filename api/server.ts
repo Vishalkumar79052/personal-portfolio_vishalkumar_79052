@@ -1,18 +1,10 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-<<<<<<< HEAD
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
-=======
-// import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv";
-
-
->>>>>>> 6bc85950e0fc565b895ccf783d132a834cf1d3ed
 dotenv.config();
 
 const app = express();
@@ -20,27 +12,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-<<<<<<< HEAD
 // Initialize server-side Gemini client if an API key is configured
 const geminiApiKey = process.env.GEMINI_API_KEY_1 || process.env.GEMINI_API_KEY;
 const ai = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
-=======
-
-// Initialize server-side Gemini client
-if (!process.env.GEMINI_API_KEY_1) {
-  throw new Error("GEMINI_API_KEY_1 is missing");
-}
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY_1,
-});
-
-// async function startServer() {
-  // const app = express();
-  // const PORT = 3000;
-
-  app.use(express.json());
->>>>>>> 6bc85950e0fc565b895ccf783d132a834cf1d3ed
 
   // Vishal's detailed professional resume details for context injection
   const VISHAL_RESUME_CONTEXT = `
@@ -80,12 +54,7 @@ His Experience Highlights:
    - Bachelor of Technology (B.Tech) in Computer Science & Engineering.
 
 Aesthetic / Custom Portfolio details:
-<<<<<<< HEAD
 - The website features Light & Dark mode with customizable accent palettes and an AI Copilot powered by Gemini.
-=======
-- He built an interactive "Vector & Semantic Projection Simulator" with custom mathematical computations on his website to demonstrate how LLMs utilize Vector Embeddings and Cosine Proximity for semantic search.
-- The website features verified AWS certifications (e.g., AWS Certified Developer, AWS Certified Solutions Architect, and AWS Certified AI Practitioner).
->>>>>>> 6bc85950e0fc565b895ccf783d132a834cf1d3ed
 
 Answer any questions regarding Vishal's skills, experience, or projects. Keep answers focused. Do not hallucinate credentials he doesn't have.
 `;
@@ -104,15 +73,12 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
         parts: [{ text: m.content }]
       }));
 
-<<<<<<< HEAD
       if (!ai) {
         return res.status(503).json({
           error: "Gemini API key is not configured. Set GEMINI_API_KEY_1 or GEMINI_API_KEY in .env or .env.local.",
         });
       }
 
-=======
->>>>>>> 6bc85950e0fc565b895ccf783d132a834cf1d3ed
       try {
         const response = await ai.models.generateContent({
           model: "gemini-2.5-flash",
@@ -289,7 +255,6 @@ Answer any questions regarding Vishal's skills, experience, or projects. Keep an
     }
   });
 
-<<<<<<< HEAD
 // Start local server with Vite dev middleware (or static dist) when not running on Vercel
 async function startLocalServer() {
   const PORT = Number(process.env.PORT) || 3000;
@@ -320,28 +285,5 @@ if (!process.env.VERCEL) {
     process.exit(1);
   });
 }
-=======
-  // Serve static assets or mount Vite dev middleware
-  // if (process.env.NODE_ENV !== "production") {
-  //   const vite = await createViteServer({
-  //     server: { middlewareMode: true },
-  //     appType: "spa",
-  //   });
-  //   app.use(vite.middlewares);
-  // } else {
-  //   const distPath = path.join(process.cwd(), 'dist');
-  //   app.use(express.static(distPath));
-  //   app.get('*', (req, res) => {
-  //     res.sendFile(path.join(distPath, 'index.html'));
-  //   });
-  // }
-
-  // app.listen(PORT, "0.0.0.0", () => {
-  //   console.log(`Server running on port ${PORT}`);
-  // });
-
-
-// startServer();
->>>>>>> 6bc85950e0fc565b895ccf783d132a834cf1d3ed
 
 export default app;
