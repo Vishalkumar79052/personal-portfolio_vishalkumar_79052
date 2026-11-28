@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Award, ShieldCheck, Calendar, CheckCircle2, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { CERTIFICATIONS } from '../data';
+import { Tilt3DCard } from './Motion3D';
 
 interface CertDetails {
   id: string;
@@ -148,88 +150,106 @@ export default function Certifications() {
 
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {CERTIFICATIONS.map((cert) => {
+          {CERTIFICATIONS.map((cert, idx) => {
             const isActive = activeCertId === cert.id;
             return (
-              <button
+              <motion.div
                 key={cert.id}
-                onClick={() => handleCertClick(cert.id)}
-                className={`flex items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer select-none ${
-                  isActive
-                    ? 'bg-[var(--accent-soft)] border-[var(--accent-border)] shadow-sm'
-                    : 'surface-card surface-card-hover'
-                }`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: idx * 0.035, duration: 0.35 }}
               >
-                <div className="flex items-start gap-3 min-w-0">
-                  <div
-                    className={`p-2 rounded-xl border shrink-0 transition-colors ${
+                <Tilt3DCard maxTilt={8} glareColor="var(--spotlight-color)" className="rounded-2xl h-full">
+                  <button
+                    onClick={() => handleCertClick(cert.id)}
+                    className={`w-full h-full group flex items-center justify-between gap-3 rounded-2xl border p-4 text-left transition-all duration-200 cursor-pointer select-none preserve-3d ${
                       isActive
-                        ? 'accent-gradient-bg border-transparent text-white'
-                        : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--accent-text)]'
+                        ? 'bg-[var(--accent-soft)] border-[var(--accent-border)] shadow-sm'
+                        : 'surface-card'
                     }`}
                   >
-                    <Award className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-bold text-[var(--text-primary)] leading-snug">{cert.name}</div>
-                    <div className="text-xs font-mono text-[var(--text-muted)] mt-0.5 truncate">{cert.issuer}</div>
-                  </div>
-                </div>
-                <ChevronDown
-                  className={`w-4 h-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
-                    isActive ? 'rotate-180 text-[var(--accent-text)]' : ''
-                  }`}
-                />
-              </button>
+                    <div className="flex items-start gap-3 min-w-0 depth-z-10">
+                      <div
+                        className={`p-2 rounded-xl border shrink-0 transition-colors ${
+                          isActive
+                            ? 'accent-gradient-bg border-transparent text-white'
+                            : 'bg-[var(--bg-subtle)] border-[var(--border-subtle)] text-[var(--accent-text)]'
+                        }`}
+                      >
+                        <Award className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-[var(--text-primary)] leading-snug">{cert.name}</div>
+                        <div className="text-xs font-mono text-[var(--text-muted)] mt-0.5 truncate">{cert.issuer}</div>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
+                        isActive ? 'rotate-180 text-[var(--accent-text)]' : ''
+                      }`}
+                    />
+                  </button>
+                </Tilt3DCard>
+              </motion.div>
             );
           })}
         </div>
 
-        {activeCertId && EXT_CERT_DETAILS[activeCertId] && (
-          <div className="mt-2 rounded-2xl surface-card p-5 sm:p-6 font-mono text-xs text-[var(--text-secondary)] leading-relaxed space-y-4 animate-slideDown">
-            <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-[var(--border-subtle)]">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                <span className="text-[var(--text-primary)] font-bold uppercase text-[11px] tracking-wider">
-                  Verified Credential Details
+        <AnimatePresence mode="wait">
+          {activeCertId && EXT_CERT_DETAILS[activeCertId] && (
+            <motion.div
+              key={activeCertId}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-2 rounded-2xl surface-card p-5 sm:p-6 font-mono text-xs text-[var(--text-secondary)] leading-relaxed space-y-4"
+            >
+              <div className="flex flex-wrap justify-between items-center gap-2 pb-3 border-b border-[var(--border-subtle)]">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[var(--text-primary)] font-bold uppercase text-[11px] tracking-wider">
+                    Verified Credential Details
+                  </span>
+                </div>
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 font-bold">
+                  VERIFIED
                 </span>
               </div>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/25 font-bold">
-                VERIFIED
-              </span>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1 bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-subtle)]">
-                <div className="text-[10px] text-[var(--text-muted)]">CREDENTIAL ID</div>
-                <div className="font-bold text-[var(--text-primary)] break-all">
-                  {EXT_CERT_DETAILS[activeCertId].code}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1 bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-subtle)]">
+                  <div className="text-[10px] text-[var(--text-muted)]">CREDENTIAL ID</div>
+                  <div className="font-bold text-[var(--text-primary)] break-all">
+                    {EXT_CERT_DETAILS[activeCertId].code}
+                  </div>
+                </div>
+                <div className="space-y-1 bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-subtle)]">
+                  <div className="text-[10px] text-[var(--text-muted)]">ISSUE DATE</div>
+                  <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[var(--accent-text)]" />
+                    {EXT_CERT_DETAILS[activeCertId].date}
+                  </div>
                 </div>
               </div>
-              <div className="space-y-1 bg-[var(--bg-subtle)] p-3 rounded-xl border border-[var(--border-subtle)]">
-                <div className="text-[10px] text-[var(--text-muted)]">ISSUE DATE</div>
-                <div className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[var(--accent-text)]" />
-                  {EXT_CERT_DETAILS[activeCertId].date}
-                </div>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="text-[10px] text-[var(--text-muted)] tracking-wider font-bold">
-                VERIFIED COMPETENCIES
+              <div className="space-y-2">
+                <div className="text-[10px] text-[var(--text-muted)] tracking-wider font-bold">
+                  VERIFIED COMPETENCIES
+                </div>
+                <ul className="space-y-2 text-[var(--text-secondary)] font-sans text-xs sm:text-sm">
+                  {EXT_CERT_DETAILS[activeCertId].skillsVerified.map((competency, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                      <span>{competency}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="space-y-2 text-[var(--text-secondary)] font-sans text-xs sm:text-sm">
-                {EXT_CERT_DETAILS[activeCertId].skillsVerified.map((competency, i) => (
-                  <li key={i} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
-                    <span>{competency}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

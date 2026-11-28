@@ -1,5 +1,19 @@
 import { JOSH_BIO, JOSH_STATS } from '../data';
-import { Code2, Server, Layers, Terminal, Database, GitBranch, Brain, Sparkles, GraduationCap, Rocket, Award } from 'lucide-react';
+import {
+  Code2,
+  Server,
+  Layers,
+  Terminal,
+  Database,
+  GitBranch,
+  Brain,
+  Sparkles,
+  GraduationCap,
+  Rocket,
+  Award,
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import { Tilt3DCard } from './Motion3D';
 
 const highlights = [
   'AI & Full-Stack Developer',
@@ -19,15 +33,15 @@ const highlights = [
 const statIcons = [GraduationCap, Rocket, Award];
 
 const skillsList = [
-  { name: 'JavaScript', category: 'Language', icon: Code2, iconColor: '#eab308', glow: 'rgba(234, 179, 8, 0.16)' },
-  { name: 'Node.js', category: 'Backend', icon: Server, iconColor: '#10b981', glow: 'rgba(16, 185, 129, 0.16)' },
-  { name: 'React', category: 'Frontend', icon: Layers, iconColor: '#06b6d4', glow: 'rgba(6, 182, 212, 0.16)' },
-  { name: 'Express', category: 'Backend', icon: Terminal, iconColor: '#64748b', glow: 'rgba(100, 116, 139, 0.16)' },
-  { name: 'MongoDB', category: 'Database', icon: Database, iconColor: '#22c55e', glow: 'rgba(34, 197, 94, 0.16)' },
-  { name: 'Python', category: 'Language', icon: Code2, iconColor: '#0ea5e9', glow: 'rgba(14, 165, 233, 0.16)' },
-  { name: 'Git', category: 'Tooling', icon: GitBranch, iconColor: '#f97316', glow: 'rgba(249, 115, 22, 0.16)' },
-  { name: 'LLMs', category: 'AI Models', icon: Brain, iconColor: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.16)' },
-  { name: 'Prompt Engineering', category: 'AI Design', icon: Sparkles, iconColor: '#d946ef', glow: 'rgba(217, 70, 239, 0.16)' },
+  { name: 'JavaScript', category: 'Language', icon: Code2, iconColor: '#eab308', glow: 'rgba(234, 179, 8, 0.2)' },
+  { name: 'Node.js', category: 'Backend', icon: Server, iconColor: '#10b981', glow: 'rgba(16, 185, 129, 0.2)' },
+  { name: 'React', category: 'Frontend', icon: Layers, iconColor: '#06b6d4', glow: 'rgba(6, 182, 212, 0.2)' },
+  { name: 'Express', category: 'Backend', icon: Terminal, iconColor: '#64748b', glow: 'rgba(100, 116, 139, 0.2)' },
+  { name: 'MongoDB', category: 'Database', icon: Database, iconColor: '#22c55e', glow: 'rgba(34, 197, 94, 0.2)' },
+  { name: 'Python', category: 'Language', icon: Code2, iconColor: '#0ea5e9', glow: 'rgba(14, 165, 233, 0.2)' },
+  { name: 'Git', category: 'Tooling', icon: GitBranch, iconColor: '#f97316', glow: 'rgba(249, 115, 22, 0.2)' },
+  { name: 'LLMs', category: 'AI Models', icon: Brain, iconColor: '#8b5cf6', glow: 'rgba(139, 92, 246, 0.2)' },
+  { name: 'Prompt Engineering', category: 'AI Design', icon: Sparkles, iconColor: '#d946ef', glow: 'rgba(217, 70, 239, 0.2)' },
 ];
 
 export default function About() {
@@ -69,27 +83,34 @@ export default function About() {
           })}
         </div>
 
-        {/* Highlight Stats */}
+        {/* Highlight Stats with 3D Tilt */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-[var(--border-subtle)]">
           {JOSH_STATS.map((stat, index) => {
             const StatIcon = statIcons[index % statIcons.length];
             return (
-              <div
+              <motion.div
                 key={index}
-                className="group rounded-2xl p-4 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--accent-border)] transition-all duration-200 flex items-center justify-between gap-3"
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: index * 0.08, duration: 0.45 }}
               >
-                <div>
-                  <div className="font-display text-3xl font-bold tracking-tight accent-gradient-text">
-                    {stat.value}
+                <Tilt3DCard maxTilt={10} glareColor="var(--spotlight-color)" className="rounded-2xl">
+                  <div className="group rounded-2xl p-4 bg-[var(--bg-subtle)] border border-[var(--border-subtle)] hover:border-[var(--accent-border)] transition-colors duration-200 flex items-center justify-between gap-3 preserve-3d">
+                    <div className="depth-z-10">
+                      <div className="font-display text-3xl font-bold tracking-tight accent-gradient-text">
+                        {stat.value}
+                      </div>
+                      <div className="mt-1 text-xs font-mono font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                        {stat.label}
+                      </div>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform depth-z-20">
+                      <StatIcon className="w-5 h-5" />
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs font-mono font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-                    {stat.label}
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <StatIcon className="w-5 h-5" />
-                </div>
-              </div>
+                </Tilt3DCard>
+              </motion.div>
             );
           })}
         </div>
@@ -116,31 +137,38 @@ export function Skills() {
           {skillsList.map((skill, index) => {
             const IconComponent = skill.icon;
             return (
-              <div
+              <motion.div
                 key={index}
-                className="surface-card surface-card-hover flex flex-col justify-between rounded-2xl p-4 cursor-default group/skill relative overflow-hidden"
+                initial={{ opacity: 0, y: 18, rotateX: 10 }}
+                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: index * 0.045, duration: 0.4 }}
               >
-                <div
-                  className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-0 group-hover/skill:opacity-100 transition-opacity pointer-events-none"
-                  style={{ background: skill.glow }}
-                />
-                <div className="relative flex items-start justify-between mb-4">
-                  <div
-                    className="p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] transition-transform duration-200 group-hover/skill:scale-110"
-                    style={{ color: skill.iconColor }}
-                  >
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-muted)]">
-                    {skill.category}
-                  </span>
-                </div>
+                <Tilt3DCard maxTilt={11} glareColor={skill.glow} className="rounded-2xl h-full">
+                  <div className="surface-card flex flex-col justify-between rounded-2xl p-4 cursor-default group/skill relative overflow-hidden h-full preserve-3d">
+                    <div
+                      className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl opacity-0 group-hover/skill:opacity-100 transition-opacity pointer-events-none"
+                      style={{ background: skill.glow }}
+                    />
+                    <div className="relative flex items-start justify-between mb-4 depth-z-10">
+                      <div
+                        className="p-2.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-subtle)] transition-transform duration-200 group-hover/skill:scale-110 group-hover/skill:rotate-6"
+                        style={{ color: skill.iconColor }}
+                      >
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-muted)]">
+                        {skill.category}
+                      </span>
+                    </div>
 
-                <div className="relative flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: skill.iconColor }} />
-                  <span className="text-sm font-bold tracking-tight text-[var(--text-primary)]">{skill.name}</span>
-                </div>
-              </div>
+                    <div className="relative flex items-center gap-2 depth-z-10">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: skill.iconColor }} />
+                      <span className="text-sm font-bold tracking-tight text-[var(--text-primary)]">{skill.name}</span>
+                    </div>
+                  </div>
+                </Tilt3DCard>
+              </motion.div>
             );
           })}
         </div>

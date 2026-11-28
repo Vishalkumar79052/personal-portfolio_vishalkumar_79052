@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, MouseEvent as ReactMouseEvent } from 'react';
 import { Download, MoreVertical, Sun, Moon } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { ThemeMode } from '../App';
 
 interface HeaderProps {
@@ -105,9 +106,13 @@ export default function Header({ activeSection, mode, toggleMode }: HeaderProps)
           className="flex items-center gap-2.5 font-bold tracking-wider text-sm shrink-0 group"
           aria-label="Scroll back to top"
         >
-          <span className="w-8 h-8 rounded-xl accent-gradient-bg text-white flex items-center justify-center font-black text-xs shadow-md group-hover:scale-105 transition-transform">
+          <motion.span
+            whileHover={{ rotateY: 180 }}
+            transition={{ duration: 0.45 }}
+            className="w-8 h-8 rounded-xl accent-gradient-bg text-white flex items-center justify-center font-black text-xs shadow-md"
+          >
             VK
-          </span>
+          </motion.span>
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-secondary)] font-semibold">
             <span>Vishal Kumar</span>
             <span className="text-[9px] uppercase px-1.5 py-0.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-subtle)] text-[var(--text-muted)]">
@@ -116,12 +121,12 @@ export default function Header({ activeSection, mode, toggleMode }: HeaderProps)
           </span>
         </a>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation with Sliding Active Pill */}
         <nav
           className="hidden lg:flex items-center max-w-full overflow-x-auto scrollbar-none py-1 px-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-subtle)]"
           aria-label="Global upper navigation"
         >
-          <div className="flex items-center whitespace-nowrap gap-0.5">
+          <div className="flex items-center whitespace-nowrap gap-0.5 relative">
             {navItems.map((item) => {
               const isActive = activeSection === item.id;
               return (
@@ -129,13 +134,18 @@ export default function Header({ activeSection, mode, toggleMode }: HeaderProps)
                   key={item.id}
                   href={`#${item.id}`}
                   onClick={(e) => handleNavClick(e, item.id)}
-                  className={`text-[11px] font-bold uppercase tracking-wider transition-all duration-200 relative py-1.5 px-3.5 rounded-full cursor-pointer select-none ${
-                    isActive
-                      ? 'text-white accent-gradient-bg shadow-sm'
-                      : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
+                  className={`text-[11px] font-bold uppercase tracking-wider transition-colors duration-200 relative py-1.5 px-3.5 rounded-full cursor-pointer select-none ${
+                    isActive ? 'text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  {item.label}
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeNavPill"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      className="absolute inset-0 rounded-full accent-gradient-bg shadow-sm"
+                    />
+                  )}
+                  <span className="relative z-10">{item.label}</span>
                 </a>
               );
             })}
@@ -160,63 +170,79 @@ export default function Header({ activeSection, mode, toggleMode }: HeaderProps)
               <MoreVertical className="w-4 h-4" />
             </button>
 
-            {mobileMenuOpen && (
-              <div className="absolute top-full mt-2 right-0 w-52 rounded-2xl surface-elevated p-2 z-50 animate-slideDown">
-                <div className="flex flex-col gap-1">
-                  {navItems.map((item) => {
-                    const isActive = activeSection === item.id;
-                    return (
-                      <a
-                        key={item.id}
-                        href={`#${item.id}`}
-                        onClick={(e) => handleNavClick(e, item.id)}
-                        className={`flex items-center justify-between w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer select-none ${
-                          isActive
-                            ? 'bg-[var(--accent-soft)] text-[var(--text-primary)]'
-                            : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
-                        }`}
-                      >
-                        <span>{item.label}</span>
-                        {isActive && <span className="w-1.5 h-1.5 rounded-full accent-gradient-bg" />}
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {mobileMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                  transition={{ duration: 0.18 }}
+                  className="absolute top-full mt-2 right-0 w-52 rounded-2xl surface-elevated p-2 z-50"
+                >
+                  <div className="flex flex-col gap-1">
+                    {navItems.map((item) => {
+                      const isActive = activeSection === item.id;
+                      return (
+                        <a
+                          key={item.id}
+                          href={`#${item.id}`}
+                          onClick={(e) => handleNavClick(e, item.id)}
+                          className={`flex items-center justify-between w-full text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer select-none ${
+                            isActive
+                              ? 'bg-[var(--accent-soft)] text-[var(--text-primary)]'
+                              : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]'
+                          }`}
+                        >
+                          <span>{item.label}</span>
+                          {isActive && <span className="w-1.5 h-1.5 rounded-full accent-gradient-bg" />}
+                        </a>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Dark / Light Mode Toggle */}
+          {/* Animated Dark / Light Mode Toggle */}
           <button
             onClick={toggleMode}
             className="flex items-center gap-1.5 px-2.5 py-2 sm:px-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:bg-[var(--bg-surface-hover)] hover:border-[var(--accent-border)] text-[var(--text-primary)] text-[11px] font-semibold transition-all duration-200 active:scale-95 cursor-pointer"
             aria-label={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={mode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {mode === 'dark' ? (
-              <>
-                <Sun className="w-4 h-4 text-amber-400" />
-                <span className="hidden sm:inline font-mono">Light</span>
-              </>
-            ) : (
-              <>
-                <Moon className="w-4 h-4 text-indigo-600" />
-                <span className="hidden sm:inline font-mono">Dark</span>
-              </>
-            )}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={mode}
+                initial={{ rotate: -90, scale: 0.6, opacity: 0 }}
+                animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                exit={{ rotate: 90, scale: 0.6, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center"
+              >
+                {mode === 'dark' ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-indigo-600" />
+                )}
+              </motion.span>
+            </AnimatePresence>
+            <span className="hidden sm:inline font-mono">{mode === 'dark' ? 'Light' : 'Dark'}</span>
           </button>
 
           {/* Resume Download */}
-          <button
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleDownloadResume}
-            className="flex items-center gap-1.5 px-3 py-2 sm:px-4 rounded-xl accent-gradient-bg text-white text-[11px] font-bold uppercase tracking-wider transition-all duration-200 active:scale-95 shadow-md hover:opacity-95 cursor-pointer shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-4 rounded-xl accent-gradient-bg text-white text-[11px] font-bold uppercase tracking-wider shadow-md hover:opacity-95 cursor-pointer shrink-0"
             title="Download PDF Resume"
           >
             <Download className="w-3.5 h-3.5" />
             <span>
               <span className="hidden sm:inline">Download </span>Resume
             </span>
-          </button>
+          </motion.button>
         </div>
       </div>
 
